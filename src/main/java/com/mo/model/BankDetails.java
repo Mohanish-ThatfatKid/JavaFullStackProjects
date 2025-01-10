@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BankDetails {
 
-	private String AccountNumber;
+	private String accountNumber;
 	private String accountHolderName;
 	private String IFSCCode;
 }

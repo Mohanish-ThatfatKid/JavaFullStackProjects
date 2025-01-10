@@ -32,7 +32,7 @@ public class IEmailServiceImpl implements IEmailService {
 
 		} catch (MailException e) {
 
-			throw new MailSendException("Failed to send a email");
+			throw new MailSendException("Failed to send a email", e);
 		}
 
 	}

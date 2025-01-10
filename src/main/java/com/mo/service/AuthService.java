@@ -14,8 +14,8 @@ public interface AuthService {
 	
 	public boolean sendVerificationOtp(String email, UserRole role) throws MessagingException;
 	
-	public void setAccountVerified(String email, String otp);
+	public boolean setAccountVerified(String email, String otp);
 	
-	public AuthResponse userSigin(LoginRequest request);
-	public AuthResponse hostSigin(LoginRequest request);
+	public AuthResponse userSignin(LoginRequest request);
+	public AuthResponse hostSignin(LoginRequest request);
 }

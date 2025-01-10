@@ -21,7 +21,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
 	@Autowired
 	private JwtRequestFilter jwtRequestFilter;
 
@@ -37,9 +36,12 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		System.out.println("SecurityConfig.filterChain()");
 		http.sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.authorizeHttpRequests(auth -> auth.requestMatchers("/", "/api/property/*/review", "/api/auth/userSignin", "/api/auth/hostSignin")
-						.permitAll().requestMatchers("/api/app/user/**").hasAuthority("ROLE_USER")
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers("/", "/auth/**", "/auth/verify/**", "/api/property/*/review", "/auth/userSignin",
+								"/api/auth/hostSignin").permitAll()
+						.requestMatchers("/api/app/user/**").hasAuthority("ROLE_USER")
 						.requestMatchers("/api/app/host/**").hasAuthority("ROLE_HOST").anyRequest().authenticated())
 				.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
 				.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(corsConfigurationSource()));
@@ -49,10 +51,11 @@ public class SecurityConfig {
 
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
+		System.out.println("SecurityConfig.corsConfigurationSource()");
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+//		configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+		configuration.setAllowedMethods(Arrays.asList("*"));
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "*"));
 		configuration.setAllowCredentials(true);
 		configuration.setMaxAge(3600L);
 		return request -> configuration;
