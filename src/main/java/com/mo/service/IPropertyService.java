@@ -3,7 +3,6 @@ package com.mo.service;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.mo.model.Amenities;
 import com.mo.model.HostUser;
 import com.mo.model.Property;
 
@@ -13,7 +12,7 @@ public interface IPropertyService {
 	
 	public Property getPropertyById(Long id);
 	
-	public Property getPropertyByAmenities(Amenities amenities);
+	public List<Property> findPropertiesByAmenities(Boolean pickUpDrop, Boolean wifi, Boolean swimmingPool, Boolean freeBreakfast, Boolean garden, Boolean playArea);
 	
 	public List<Property> getPropertiesByRating(double rating);
 	
@@ -27,6 +26,6 @@ public interface IPropertyService {
 	
 	public Property updateProperty(Long id, Property property, HostUser host);
 	
-	public Property deleteProperty(Long id, HostUser host);
+	public void deleteProperty(Long id, HostUser host);
 	
 }

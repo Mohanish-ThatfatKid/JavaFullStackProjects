@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedDate;
 
 import com.mo.domain.AccountStatus;
 import com.mo.domain.UserRole;
@@ -66,7 +66,7 @@ public class User {
 	@OneToMany(mappedBy = "user",cascade = CascadeType.ALL,orphanRemoval = true)
 	private List<BookingDetails> booking = new ArrayList<>();
 	
-	@CreatedDate
+	@CreationTimestamp
 	private Instant createdOn;
 	
 	@UpdateTimestamp

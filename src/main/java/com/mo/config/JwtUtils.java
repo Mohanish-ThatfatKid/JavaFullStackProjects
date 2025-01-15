@@ -22,7 +22,7 @@ public class JwtUtils {
 	}
 
 	public String extractRole(String token) {
-		return extractClaim(token, Claims::getId);
+	    return extractClaim(token, claims -> claims.get("role", String.class));
 	}
 	
 	public Date extractExpiration(String token) {
@@ -59,13 +59,14 @@ public class JwtUtils {
 
 		long expirationTime = 7 * 24 * 60 * 60 * 1000; // set expiry time as 7 days
 
-		return Jwts.builder()
-				.setId(role)
-				.setSubject(subject)
-				.setClaims(claims)
-				.setIssuedAt(new Date(now))
-				.setExpiration(new Date(now + expirationTime))
-				.signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+		 return Jwts.builder()
+		 .setClaims(claims) // Add additional claims if needed
+         .setSubject(subject) // Set the email/username as the subject
+         .claim("role", role) // Add role as a custom claim
+         .setIssuedAt(new Date(now)) // Set the issue date
+         .setExpiration(new Date(now + expirationTime)) // Set expiry date
+         .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // Sign with the secret key
+         .compact();
 
 	}
 }

@@ -1,7 +1,13 @@
 package com.mo.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.mo.config.JwtUtils;
+import com.mo.domain.AccountStatus;
+import com.mo.domain.UserRole;
+import com.mo.exceptions.HostRegistrationException;
 import com.mo.model.Address;
 import com.mo.model.BankDetails;
 import com.mo.model.HostUser;
@@ -15,8 +21,32 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class IHostUserServiceImpl implements IHostUserService {
 
+	@Autowired
+	private BCryptPasswordEncoder encoder;
 	private final HostUserRepository hostRepo;
 	private final AddressRepository addressRepo;
+	private final JwtUtils jwtUtils;
+
+	@Override
+	public boolean registerHostUser(HostUser hostUser) {
+		hostUser.setPassword(encoder.encode(hostUser.getPassword()));
+		hostUser.setRole(UserRole.HOST);
+		hostUser.setAccountStatus(AccountStatus.INACTIVE);
+
+		Address address = addressRepo.save(hostUser.getAddress());
+		
+		if (address==null) {
+			throw new HostRegistrationException("Address saving failed while registrartion");
+		}
+		
+		
+		hostUser.setAddress(address);
+		HostUser saveHostUser = this.saveHostUser(hostUser);
+		if (saveHostUser==null) {
+			throw new HostRegistrationException("Registration Failed");
+		}
+		return true;
+	}
 
 	@Override
 	public HostUser getHostUserById(Long id) throws Exception {
@@ -60,12 +90,13 @@ public class IHostUserServiceImpl implements IHostUserService {
 	}
 
 	@Override
-	public HostUser updateHostUserAddress(Address address, String email) throws Exception {
+	public HostUser updateHostUserAddress(Address address, String email) {
 
 		HostUser hostUser = this.getHostUserByEmail(email);
 		Address savedAddress = addressRepo.findById(hostUser.getAddress().getId()).get();
 		addressRepo.delete(savedAddress);
-		hostUser.setAddress(address);
+		Address newAddress = addressRepo.save(address);
+		hostUser.setAddress(newAddress);
 
 		return hostRepo.save(hostUser);
 
@@ -82,7 +113,7 @@ public class IHostUserServiceImpl implements IHostUserService {
 	}
 
 	@Override
-	public HostUser updateHostUserBankDetails(BankDetails bankDetails, String email) throws Exception {
+	public HostUser updateHostUserBankDetails(BankDetails bankDetails, String email) {
 
 		HostUser hostUser = this.getHostUserByEmail(email);
 
@@ -92,7 +123,7 @@ public class IHostUserServiceImpl implements IHostUserService {
 	}
 
 	@Override
-	public HostUser updateHostUserProfileImage(String profileImage, String email) throws Exception {
+	public HostUser updateHostUserProfileImage(String profileImage, String email) {
 
 		HostUser hostUser = this.getHostUserByEmail(email);
 
@@ -100,6 +131,17 @@ public class IHostUserServiceImpl implements IHostUserService {
 
 		return hostRepo.save(hostUser);
 
+	}
+
+	@Override
+	public String getHostUserEmailFromJwt(String jwt) {
+		jwt = jwt.substring(7);
+		return jwtUtils.extractUsername(jwt);
+	}
+
+	@Override
+	public HostUser saveHostUser(HostUser hostUser) {
+		return hostRepo.save(hostUser);
 	}
 
 }

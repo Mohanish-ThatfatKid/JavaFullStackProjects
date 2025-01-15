@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.mo.config.JwtUtils;
 import com.mo.domain.AccountStatus;
 import com.mo.domain.UserRole;
 import com.mo.exceptions.UserRegistrationException;
@@ -22,36 +23,38 @@ public class IUserServiceImpl implements IUserService {
 
 	private final UserRepository userRepo;
 	private final AddressRepository addressRepo;
+	private final JwtUtils jwtUtils;
 
 	@Autowired
 	private BCryptPasswordEncoder encoder;
 
 	@Override
 	public boolean registerUserDetails(User user) throws Exception {
-		 // Set default role and account status
-	    user.setRole(UserRole.USER);
-	    user.setAccountStatus(AccountStatus.INACTIVE);
+		// Set default role and account status
+		user.setRole(UserRole.USER);
+		user.setAccountStatus(AccountStatus.INACTIVE);
 
-	    // Encrypt the user's password
-	    user.setPassword(encoder.encode(user.getPassword()));
+		// Encrypt the user's password
+		user.setPassword(encoder.encode(user.getPassword()));
 
-	    // Save the address first to ensure it's persisted before linking it to the user
-	    Address address = addressRepo.save(user.getAddress());
-	    if (address == null) {
-	        throw new UserRegistrationException("Address saving failed during registration");
-	    }
+		// Save the address first to ensure it's persisted before linking it to the user
+		Address address = addressRepo.save(user.getAddress());
+		if (address == null) {
+			throw new UserRegistrationException("Address saving failed during registration");
+		}
 
-	    // Save the user with the address
-	    user.setAddress(address);
-	    User savedUser = userRepo.save(user);
+		// Save the user with the address
+		user.setAddress(address);
+		User savedUser = userRepo.save(user);
 
-	    // Validate that the user was saved successfully
-	    if (savedUser == null) {
-	    	throw new UserRegistrationException("User registration failed !!!");
-	    }
+		// Validate that the user was saved successfully
+		if (savedUser == null) {
+			throw new UserRegistrationException("User registration failed !!!");
+		}
 
-	    // No need to create authorities manually at this point unless it's used elsewhere
-	    return true;
+		// No need to create authorities manually at this point unless it's used
+		// elsewhere
+		return true;
 
 	}
 
@@ -74,7 +77,8 @@ public class IUserServiceImpl implements IUserService {
 		if (user != null) {
 			Address savedAddress = addressRepo.findById(user.getAddress().getId()).get();
 			addressRepo.delete(savedAddress);
-			user.setAddress(address);
+			Address newAddress = addressRepo.save(address);
+			user.setAddress(newAddress);
 			return userRepo.save(user);
 		}
 		return null;
@@ -82,14 +86,14 @@ public class IUserServiceImpl implements IUserService {
 
 	@Override
 	public User updateUserProfilePicture(String profilePicture, String email) {
-
-		User user = userRepo.findByEmail(email);
-		if (user != null) {
-			user.setProfileImage(profilePicture);
-			return userRepo.save(user);
+		User user = getUserByEmail(email);
+		System.out.println(user);
+		if (user==null) {
+			return null;
 		}
-
-		return null;
+		user.setProfileImage(profilePicture);
+		return userRepo.save(user);
+		
 	}
 
 	@Override
@@ -111,6 +115,13 @@ public class IUserServiceImpl implements IUserService {
 			throw new Exception("User Not found with given Id");
 		}
 		return user;
+	}
+
+	@Override
+	public String getuserEmailFromJWt(String jwt) {
+
+		jwt = jwt.substring(7);
+		return jwtUtils.extractUsername(jwt);
 	}
 
 	@Override

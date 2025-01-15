@@ -9,7 +9,7 @@ public interface IUserService {
 	public boolean registerUserDetails(User user) throws Exception;
 
 	public User getUserById(Long id) throws Exception;
-
+	
 	public User getUserByEmail(String email);
 
 	public User updateUserAddressDetails(Address address, String email);
@@ -21,5 +21,7 @@ public interface IUserService {
 	public void deleteUserAccount(User user);
 
 	void deleteUserAccountById(Long id);
+
+	String getuserEmailFromJWt(String jwt);
 
 }

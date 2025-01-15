@@ -20,6 +20,7 @@ import com.mo.model.VerificationCode;
 import com.mo.repository.UserRepository;
 import com.mo.repository.VerificationCodeRepository;
 import com.mo.requestDTO.LoginRequest;
+import com.mo.requestDTO.VerificationRequest;
 import com.mo.response.AuthResponse;
 import com.mo.service.AuthService;
 import com.mo.service.IEmailService;
@@ -41,7 +42,7 @@ public class IAuthServiceImpl implements AuthService {
 	private final IHostUserService hostService;
 	private final IEmailService emailService;
 	private final VerificationCodeRepository verificationCodeRepo;
-	private final ICustomUserAuthServiceImpl customeUserAuthServiceImpl;
+	//private final ICustomUserAuthServiceImpl customeUserAuthServiceImpl;
 	private final JwtUtils jwtUtils;
 
 	@Override
@@ -71,6 +72,7 @@ public class IAuthServiceImpl implements AuthService {
 			}
 			userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(),
 					Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+			System.out.printf(userDetails.getUsername() + userDetails.getPassword());
 		} else {
 			HostUser hostUser = hostService.getHostUserByEmail(email);
 			if (hostUser == null) {
@@ -117,6 +119,10 @@ public class IAuthServiceImpl implements AuthService {
 			}
 			return false;
 		} else {
+			HostUser hostUser = hostService.getHostUserByAadharNumber(aadharNumber);
+			if (hostUser!=null) {
+				return true;
+			}
 			return false;
 		}
 	}
@@ -146,6 +152,28 @@ public class IAuthServiceImpl implements AuthService {
 				return false;
 			}
 		} else if (role.equals(UserRole.HOST)) {
+			
+			HostUser hostUser = hostService.getHostUserByEmail(email);
+			if (hostUser!=null) {
+				String otp = HelperUtil.generateOtp();
+				String Subject = "Email Verification";
+				String text = "Dear, " + hostUser.getFirstName() + " " + hostUser.getLastName()
+						+ "\n Thank you for registering yourself as a host with 'Stakation'. \n"
+						+"we hope that you will host many people at property"
+						+ "\nUse this otp to varify your email address and complet the registration process. \n \t ( " + otp + " )";
+
+				VerificationCode verificationCode = new VerificationCode();
+				verificationCode.setEmail(email);
+				verificationCode.setOtpCode(otp);
+				VerificationCode codeSaved = verificationCodeRepo.save(verificationCode);
+				if (codeSaved != null) {
+					emailService.sendVerificationOtpEmail(email, Subject, text);
+					return true;
+				} else {
+					return false;
+				}
+			}
+			
 			return false;
 		} else {
 			return false;
@@ -164,5 +192,22 @@ public class IAuthServiceImpl implements AuthService {
 			return true;
 		}
 	}
+
+	@Override
+	public boolean setHostAccountVerified(VerificationRequest request) {
+		VerificationCode verificationCode = verificationCodeRepo.findByEmail(request.getEmail());
+		if (verificationCode == null || !verificationCode.getOtpCode().equals(request.getOtp())) {
+			throw new BadCredentialsException("Wrong Otp");
+		}
+		HostUser hostUser = hostService.getHostUserByEmail(request.getEmail());
+		hostUser.setAccountStatus(AccountStatus.ACTIVE);
+		HostUser saveHostUser = hostService.saveHostUser(hostUser);
+		if (saveHostUser!=null) {
+			return true;			
+		}
+		return false;
+	}
+	
+	
 
 }

@@ -1,5 +1,10 @@
 package com.mo.model;
 
+import java.time.Instant;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import com.mo.domain.AccountStatus;
 import com.mo.domain.UserRole;
 
@@ -50,6 +55,12 @@ public class HostUser {
 
 	@Embedded
 	private BankDetails bankDetails;
+	
+	@CreationTimestamp
+	private Instant createdOn;
+	
+	@UpdateTimestamp
+	private Instant lastModifiedOn;
 	
 	@Enumerated(EnumType.STRING)
 	private AccountStatus accountStatus = AccountStatus.INACTIVE;

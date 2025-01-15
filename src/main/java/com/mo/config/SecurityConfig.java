@@ -1,12 +1,12 @@
 package com.mo.config;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,17 +18,28 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.mo.service.impl.ICustomUserAuthServiceImpl;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 	@Autowired
 	private JwtRequestFilter jwtRequestFilter;
 
-	@Bean
+	@Autowired
 	PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
+	
+	@Autowired
+	private ICustomUserAuthServiceImpl customUserAuthServiceImpl;
 
+	
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+	    auth.userDetailsService(customUserAuthServiceImpl)
+	        .passwordEncoder(passwordEncoder()); // Ensure the encoder is used here
+	}
+	
 	@Bean
 	AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
 		return configuration.getAuthenticationManager();
@@ -41,8 +52,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/", "/auth/**", "/auth/verify/**", "/api/property/*/review", "/auth/userSignin",
 								"/api/auth/hostSignin").permitAll()
-						.requestMatchers("/api/app/user/**").hasAuthority("ROLE_USER")
-						.requestMatchers("/api/app/host/**").hasAuthority("ROLE_HOST").anyRequest().authenticated())
+						.requestMatchers("/api/user/**").hasAuthority("ROLE_USER")
+						.requestMatchers("/api/host/**").hasAuthority("ROLE_HOST").anyRequest().authenticated())
 				.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
 				.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
