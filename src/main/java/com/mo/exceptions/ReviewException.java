@@ -1,13 +1,15 @@
 package com.mo.exceptions;
 
-public class BookingDetailsException extends RuntimeException{
+public class ReviewException extends RuntimeException {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public BookingDetailsException(String message) {
+	public ReviewException(String message) {
+
 		super(message);
 	}
+
 }

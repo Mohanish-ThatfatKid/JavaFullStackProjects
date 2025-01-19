@@ -36,7 +36,7 @@ public class Transaction {
 	private Property property;
 	
 	@ManyToOne
-	private HostUser host;
+	private BookingDetails bookingDetails;
 	
 	private double totalPrice;
 	

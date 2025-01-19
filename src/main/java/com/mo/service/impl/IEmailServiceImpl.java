@@ -55,4 +55,42 @@ public class IEmailServiceImpl implements IEmailService {
 		}
 	}
 
+	@Override
+	public void sendBookingConfirmedEmail(String userEmail, String text, String subject)
+			throws MessagingException {
+
+		try {
+			MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+			MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
+			messageHelper.setFrom("Stakation");
+			messageHelper.setTo(userEmail);
+			messageHelper.setText(text);
+			messageHelper.setSubject(subject);
+
+			javaMailSender.send(mimeMessage);
+		} catch (MailException e) {
+
+			throw new MailSendException("Failed to send a booking email to user");
+		}
+
+	}
+	
+	@Override
+	public void sendConfirmBookingMailToHost(String hostEmail, String propertyEmail, String text, String subject) throws MessagingException {
+		try {
+			MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+			MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
+			messageHelper.setFrom("Stakation");
+			messageHelper.setTo(propertyEmail);
+			messageHelper.setCc(hostEmail);
+			messageHelper.setText(text);
+			messageHelper.setSubject(subject);
+
+			javaMailSender.send(mimeMessage);
+		} catch (MailException e) {
+
+			throw new MailSendException("Failed to send a booking email to user");
+		}
+	}
+
 }

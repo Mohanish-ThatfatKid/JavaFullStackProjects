@@ -52,8 +52,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/", "/auth/**", "/auth/verify/**", "/api/property/*/review", "/auth/userSignin",
 								"/api/auth/hostSignin").permitAll()
-						.requestMatchers("/api/user/**").hasAuthority("ROLE_USER")
-						.requestMatchers("/api/host/**").hasAuthority("ROLE_HOST").anyRequest().authenticated())
+						.requestMatchers("/api/user/**","/api/booking/user/**","/api/complaint/user/**").hasAuthority("ROLE_USER")
+						.requestMatchers("/api/host/**","/api/booking/host/**","/api/complaint/user/**").hasAuthority("ROLE_HOST").anyRequest().authenticated())
 				.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
 				.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(corsConfigurationSource()));
 

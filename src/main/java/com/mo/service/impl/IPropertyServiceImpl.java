@@ -1,10 +1,18 @@
 package com.mo.service.impl;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import com.mo.domain.PropertyLocationCategory;
+import com.mo.domain.PropertySizeCategory;
 import com.mo.exceptions.PropertyException;
 import com.mo.exceptions.PropertyRegistrationException;
 import com.mo.model.Address;
@@ -14,6 +22,7 @@ import com.mo.repository.AddressRepository;
 import com.mo.repository.PropertyRepository;
 import com.mo.service.IPropertyService;
 
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,9 +33,60 @@ public class IPropertyServiceImpl implements IPropertyService {
 	private final AddressRepository addressRepo;
 
 	@Override
-	public List<Property> getAllProperties(int pagenumber) {
-		// TODO Auto-generated method stub
-		return null;
+	public Page<Property> getAllProperties(String propertyLocationCategory, String propertySizeCategory,
+			Double minimumBasePrice, Double maximumBasePrice, Double minimumOfferPrice, Double maximumOfferPrice,
+			Integer maxGuests, Boolean isActive, String sort, Integer pageNumber) {
+		Specification<Property> specification = (root, query, criteriaBuilder) -> {
+			List<Predicate> predicates = new ArrayList<>();
+
+			if (propertyLocationCategory != null) {
+				predicates.add(criteriaBuilder.equal(root.get("propertyLocationCategory"),
+						PropertyLocationCategory.valueOf(propertyLocationCategory)));
+			}
+			if (propertySizeCategory != null) {
+				predicates.add(criteriaBuilder.equal(root.get("propertySizeCategory"),
+						PropertySizeCategory.valueOf(propertySizeCategory)));
+			}
+			if (minimumBasePrice != null) {
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("basePrice"), minimumBasePrice));
+			}
+			if (maximumBasePrice != null) {
+				predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("basePrice"), maximumBasePrice));
+			}
+			if (minimumOfferPrice != null) {
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("offerPrice"), minimumOfferPrice));
+			}
+			if (maximumOfferPrice != null) {
+				predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("offerPrice"), maximumOfferPrice));
+			}
+			if (maxGuests != null) {
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("maxGuests"), maxGuests));
+			}
+			if (isActive != null) {
+				predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive));
+			}
+
+			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+		};
+
+		Pageable pageable;
+		if (sort != null) {
+			pageable = switch (sort) {
+			case "price_low" ->
+				PageRequest.of(pageNumber != null ? pageNumber : 0, 10, Sort.by("basePrice").ascending());
+			case "price_high" ->
+				PageRequest.of(pageNumber != null ? pageNumber : 0, 10, Sort.by("basePrice").descending());
+			case "offer_price_low" ->
+				PageRequest.of(pageNumber != null ? pageNumber : 0, 10, Sort.by("offerPrice").ascending());
+			case "offer_price_high" ->
+				PageRequest.of(pageNumber != null ? pageNumber : 0, 10, Sort.by("offerPrice").descending());
+			default -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10, Sort.unsorted());
+			};
+		} else {
+			pageable = PageRequest.of(pageNumber != null ? pageNumber : 0, 10, Sort.unsorted());
+		}
+
+		return propRepo.findAll(specification, pageable);
 	}
 
 	@Override
@@ -43,14 +103,12 @@ public class IPropertyServiceImpl implements IPropertyService {
 
 	@Override
 	public List<Property> getPropertiesByRating(double rating) {
-		// TODO Auto-generated method stub
-		return null;
+		return propRepo.findPropertiesByMinRating(rating);
 	}
 
 	@Override
 	public List<Property> getPropertiesByPrice(double minPrice, double MaxPrice) {
-		// TODO Auto-generated method stub
-		return null;
+		return propRepo.findByBasePriceBetween(minPrice, MaxPrice);
 	}
 
 	@Override

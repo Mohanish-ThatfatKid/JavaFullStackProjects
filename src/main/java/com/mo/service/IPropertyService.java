@@ -3,12 +3,16 @@ package com.mo.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import com.mo.model.HostUser;
 import com.mo.model.Property;
 
 public interface IPropertyService {
 
-	public List<Property> getAllProperties(int pagenumber);
+	public Page<Property> getAllProperties(String propertyLocationCategory, String propertySizeCategory,
+			Double minimumBasePrice, Double maximumBasePrice, Double minimumOfferPrice, Double maximumOfferPrice,
+			Integer maxGuests, Boolean isActive, String sort, Integer pageNumber);
 	
 	public Property getPropertyById(Long id);
 	

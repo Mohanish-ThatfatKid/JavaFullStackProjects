@@ -4,13 +4,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.mo.model.HostUser;
 import com.mo.model.Property;
 
-public interface PropertyRepository extends JpaRepository<Property, Long> {
+public interface PropertyRepository extends JpaRepository<Property, Long>,JpaSpecificationExecutor<Property> {
 
 	List<Property> findByBasePriceBetween(double startprice, double maxPrice);
 
@@ -52,5 +53,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 		        @Param("garden") Boolean garden,
 		        @Param("playArea") Boolean playArea
 		    );
+	 
+	 List<Property> findByMaxGuests(int maxGuests);
+	 List<Property> findByActive(boolean active);
 
 }
