@@ -33,7 +33,7 @@ public interface BookingDetailsRepository extends JpaRepository<BookingDetails, 
 //		    @Param("checkOutDate") LocalDate checkOutDate
 //		);
 	
-	// better ffor high concurrency bookings as it locks the date ranges for till the booking is done.
+	// better for high concurrency bookings as it locks the date ranges for till the booking is done.
 	@Query("SELECT b FROM BookingDetails b WHERE b.property.id = :propertyId " +
 		       "AND b.checkInDate < :checkOutDate " +
 		       "AND b.checkOutDate > :checkInDate")

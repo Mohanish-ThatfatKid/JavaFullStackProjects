@@ -1,18 +1,22 @@
+
 package com.mo.service.impl;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.mo.exceptions.BookingDetailsException;
 import com.mo.model.BookingDetails;
+import com.mo.model.HostUser;
 import com.mo.model.Property;
 import com.mo.model.User;
 import com.mo.repository.BookingDetailsRepository;
 import com.mo.requestDTO.BookingRequest;
 import com.mo.service.IBookingService;
 import com.mo.service.IEmailService;
+import com.mo.service.IHostUserService;
 import com.mo.service.IPropertyService;
 import com.mo.service.IUserService;
 import com.mo.utils.HelperUtil;
@@ -25,10 +29,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class IBookingServiceImpl implements IBookingService {
 
+
 	private final BookingDetailsRepository bookingRepo;
 	private final IPropertyService propService;
 	private final IUserService UserServise;
 	private final IEmailService emailService;
+	private final IHostUserService hostService;
 
 	@Override
 	@Transactional
@@ -80,10 +86,36 @@ public class IBookingServiceImpl implements IBookingService {
 				+ " we are happy to inform you that your property have received a booking from" + user.getFirstName()
 				+ " " + user.getLastName() + "we are sure that you will serve our guest well./n"
 				+ "you can check the details about booking by login in to your account./n Happy Stakation";
-		
-		emailService.sendConfirmBookingMailToHost(property.getHost().getEmail(), property.getContactEmail(), textToHost, subject);
-		
 
+		emailService.sendConfirmBookingMailToHost(property.getHost().getEmail(), property.getContactEmail(), textToHost,
+				subject);
+
+	}
+
+	@Override
+	public List<BookingDetails> getAllBookingsByProperty(Long propertyId, String hostEmail) {
+		Property property = propService.getPropertyById(propertyId);
+		HostUser host = hostService.getHostUserByEmail(hostEmail);
+		List<BookingDetails> bookings = new ArrayList<>();
+		if (property.getHost().getId() == host.getId()) {
+			bookings = bookingRepo.findByProperty(property);
+			return bookings;
+		}
+		return null;
+	}
+
+	@Override
+	public boolean cancelBooking(String userEmail, Long id) {
+		
+		BookingDetails bookingDetails = bookingRepo.findById(id).get();
+		if (bookingDetails!=null) {
+			User user = UserServise.getUserByEmail(userEmail);
+			if (bookingDetails.getUser().getId() == user.getId()) {
+				bookingRepo.delete(bookingDetails);
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
